@@ -2,7 +2,7 @@ from groq import Groq
 from search_tool import search_the_web
 
 # PASTE YOUR GROQ API KEY HERE INSIDE THE QUOTES
-GROQ_API_KEY = st.secrets["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"]
+GROQ_API_KEY = st.secrets[""]
 
 def ask_cloud_assistant(user_question: str, user_name: str, sex: str) -> str:
     """Sends queries to Groq's fast remote cloud infrastructure using Llama 3.3."""
