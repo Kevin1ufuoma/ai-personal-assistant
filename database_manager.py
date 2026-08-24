@@ -1,7 +1,7 @@
 import sqlite3
 
 DB_NAME = "assistant_memory.db"
-DATABASE_URL = st.secrets["postgresql://neondb_3n8g_user:0PYdI4UHZlRzMyHlTxTTCefuwLDMc6A5@dpg-da5mmg6k1f9s7393j2ng-a.oregon-postgres.render.com/neondb_3n8g"]
+DATABASE_URL = st.secrets[""]
 
 
 def initialize_database():
