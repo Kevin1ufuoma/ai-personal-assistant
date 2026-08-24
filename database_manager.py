@@ -1,4 +1,5 @@
 import sqlite3
+import streamlit as st
 
 DB_NAME = "assistant_memory.db"
 DATABASE_URL = st.secrets["DATABASE_URL"]
