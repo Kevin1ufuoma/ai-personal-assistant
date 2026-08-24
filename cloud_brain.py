@@ -1,5 +1,6 @@
 from groq import Groq
 from search_tool import search_the_web
+import streamlit as st
 
 # PASTE YOUR GROQ API KEY HERE INSIDE THE QUOTES
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
