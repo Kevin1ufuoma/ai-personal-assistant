@@ -1,0 +1,30 @@
+
+venv/
+.venv/
+env/
+ENV/
+
+# Ignore compiled python cache acceleration folders
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore your old single-user offline database file if it still exists
+assistant_memory.db
+*.db
+*.sqlite3
+
+# Ignore your custom morning alarm file vault and all uploaded mp3 songs
+alarm_vault/
+*.mp3
+*.wav
+
+# Ignore Streamlit's hidden background system settings and state logs
+.streamlit/
+.streamlit/config.toml
+
+# Ignore local text logs or temporary flag files
+*.txt
+.DS_Store
+Thumbs.db
