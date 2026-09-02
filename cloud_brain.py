@@ -1,14 +1,8 @@
 import streamlit as st  
 from groq import Groq
+from search_tool import search_the_web
 
-# Safely import search tool
-try:
-    from search_tool import search_the_web
-except ModuleNotFoundError:
-    def search_the_web(query):
-        return "Search tool module loading..."
-
-# Securely grab your key from Streamlit Cloud's secrets vault
+# Read directly from your local secrets file
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 
 def ask_cloud_assistant(user_question: str, user_name: str, sex: str) -> str:
