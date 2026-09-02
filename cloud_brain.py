@@ -31,6 +31,6 @@ def ask_cloud_assistant(user_question: str, user_name: str, sex: str) -> str:
                 {"role": "user", "content": user_question}
             ]
         )
-        return completion.choices.message.content
+        return completion.choices[0].message.content
     except Exception as e:
         return f"Sorry {user_name}, my cloud network ran into an issue: {str(e)}"
