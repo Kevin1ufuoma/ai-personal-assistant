@@ -3,13 +3,13 @@ import datetime
 import psycopg2
 import hashlib
 import os
-from database_manager import DATABASE_URL  # Import your live cloud link
+from database_manager import DATABASE_URL  # Import your live cloud link string
 from cloud_brain import ask_cloud_assistant
 from mood_recommendation import generate_mood_recommendation
 from voice_pipeline import speak_text
 
 # Set up page configurations
-st.set_page_config(page_title="AI Personal Assistant", page_icon="🤖", layout="centered")
+st.set_page_config(page_title="AI Personal Assistant Cloud", page_icon="🤖", layout="centered")
 
 # Securely hash passwords
 def hash_password(password: str) -> str:
@@ -24,7 +24,6 @@ if "user_name" not in st.session_state:
     st.session_state.user_name = ""
 if "user_sex" not in st.session_state:
     st.session_state.user_sex = ""
-
 
 # --- FORCE CLOUD TABLE INITIALIZATION ON WEB STARTUP ---
 def force_table_creation():
@@ -66,13 +65,14 @@ def force_table_creation():
                 timestamp TIMESTAMP NOT NULL
             )
         ''')
-
-        # 4. ADD THIS: Force Contacts Table Creation Natively
+        
+        # 4. Force Contacts Table Creation Natively
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS contacts (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id),
-                contact_name TEXT NOT NULL
+                contact_name TEXT NOT NULL,
+                call_time TIMESTAMP
             )
         ''')
         
@@ -89,7 +89,7 @@ force_table_creation()
 
 # --- AUTHENTICATION INTERFACE (CLOUD GATEWAY LAYER) ---
 if not st.session_state.logged_in:
-    st.title("🤖 Welcome to AI Personal Assistant Cloud")
+    st.title("🤖 Welcome to AI Assistant Cloud")
     auth_mode = st.radio("Choose Action:", ["Login to Your Account", "Create New Account"])
     
     if auth_mode == "Create New Account":
@@ -143,7 +143,7 @@ if not st.session_state.logged_in:
                 st.session_state.user_name = user_found[1]
                 st.session_state.user_sex = user_found[2]
                 
-                # Original greeting placement
+                # Original stable voice greeting
                 speak_text(f"Access granted. Welcome back to your cloud workspace, {st.session_state.user_name}.")
                 st.rerun()
             else:
@@ -160,18 +160,18 @@ else:
         st.session_state.user_sex = ""
         st.rerun()
 
-    st.title("🤖 My AI Personal Assistant")
+    st.title("🤖 My AI Personal Assistant Cloud Panel")
     
     # --- SECTION 1: HIGH-SPEED CLOUD BRAIN (RESTORED ORIGINAL) ---
     st.markdown("---")
-    st.header("🔍 Ask your Cloud Assistant")
+    st.header("🔍 Ask Cloud Assistant")
     
     from speech_pipeline import listen_to_user_voice
     if "speech_input_text" not in st.session_state:
         st.session_state.speech_input_text = ""
 
-    if st.button("🎙️ Tap to Ask Your Question"):
-        st.info("Listening... Now Ask clearly into your mic!")
+    if st.button("🎙️ Tap to Speak Your Question"):
+        st.info("Listening... Look at your command terminal window and speak clearly into your mic!")
         spoken_result = listen_to_user_voice()
         if spoken_result:
             st.session_state.speech_input_text = spoken_result
@@ -179,11 +179,11 @@ else:
         else:
             st.warning("I couldn't catch that. Please click the button and try speaking again.")
 
-    user_query = st.text_input("Type your question here:", value=st.session_state.speech_input_text)
+    user_query = st.text_input("Type your question here (Groq API Engine):", value=st.session_state.speech_input_text, key="restored_main_query_bar")
 
     if st.button("Submit Question"):
         if user_query:
-            with st.spinner("AI processing request..."):
+            with st.spinner("High-speed Cloud AI processing request..."):
                 ai_reply = ask_cloud_assistant(user_query, st.session_state.user_name, st.session_state.user_sex)
                 st.success("Cloud Response Generated!")
                 st.write(ai_reply)
@@ -193,7 +193,7 @@ else:
 
     # --- SECTION 2: CATEGORIZED SCHEDULES MANAGEMENT ---
     st.markdown("---")
-    st.header("📅 AI Schedule Management")
+    st.header("📅 Cloud Schedule Management")
 
     task_title = st.text_input("Task / Event Title:")
     task_category = st.selectbox("Category:", ["Health", "Business", "Personal"])
@@ -247,37 +247,21 @@ else:
         except Exception as e:
             st.error(f"Mood Check-in Failed: {str(e)}")
 
-
-     # --- UPGRADED SECTION 4: SCHEDULED CALLS MANAGEMENT ---
+    # --- SECTION 4: UPGRADED CALL REMINDER MANAGEMENT ---
     st.markdown("---")
     st.header("📞 Scheduled Call Contact Saver")
     new_contact = st.text_input("Enter Contact Name to Save:")
     
-    # Date and Time picking widgets for the phone call schedule
     call_date = st.date_input("Schedule Call Date:", datetime.date.today(), key="call_date_picker")
     call_time = st.time_input("Schedule Call Time:", datetime.time(12, 0), key="call_time_picker")
     
     if st.button("Save Contact & Schedule Call"):
         if new_contact:
-            
-            #Combine the inputs
             local_dt = datetime.datetime.combine(call_date, call_time)
-
-            #Subtract 1 hour (because Nigeria is UTC + 1 hour ahead) to match the cloud clock
-            combined_call_dt = local_dt - datetime.timedelta(hours=1)
-
+            combined_call_dt = local_dt - datetime.timedelta(hours=1)  # West Africa timezone correction
             
             conn = psycopg2.connect(DATABASE_URL)
             cursor = conn.cursor()
-
-            
-            # Ensure the table layout contains the timestamp column
-            try:
-                cursor.execute("ALTER TABLE contacts ADD COLUMN call_time TIMESTAMP")
-                conn.commit()
-            except Exception:
-                conn.rollback()
-                
             cursor.execute(
                 "INSERT INTO contacts (user_id, contact_name, call_time) VALUES (%s, %s, %s)", 
                 (st.session_state.user_id, new_contact, combined_call_dt)
@@ -285,13 +269,12 @@ else:
             conn.commit()
             cursor.close()
             conn.close()
-            st.success(f"Successfully scheduled a call with '{new_contact}' for {combined_call_dt.strftime('%Y-%m-%d %H:%M')}!")
+            st.success(f"Successfully scheduled a call with '{new_contact}'!")
             st.rerun()
             
-    # Display upcoming active calls on the page dashboard
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
-    cursor.execute("SELECT contact_name, call_time FROM contacts WHERE user_id = %s ORDER BY call_time ASC", (st.session_state.user_id,))
+    cursor.execute("SELECT contact_name, call_time FROM contacts WHERE user_id = %s AND call_time IS NOT NULL ORDER BY call_time ASC", (st.session_state.user_id,))
     all_contacts = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -300,28 +283,23 @@ else:
         st.write("**Your Scheduled Voice Reminder Calls:**")
         for c in all_contacts:
             name_str = c[0]
-            # Format the database timestamp neatly for display
-            time_str = c[1].strftime('%Y-%m-%d %H:%M') if c[1] else "No time set"
+            local_display_time = c[1] + datetime.timedelta(hours=1)
+            time_str = local_display_time.strftime('%Y-%m-%d %H:%M')
             st.write(f"- **{name_str}** scheduled for: {time_str}")
 
-
-    # --- SECTION 5: WEEKLY MORNING ALARM TRACK COMPONENT ---
+    # --- SECTION 5: MORNING ALARM WORKSPACE ---
     st.markdown("---")
     st.header("⏰ Custom Weekly Morning Alarm File Upload")
-    
     VAULT_DIR = "alarm_vault"
     if not os.path.exists(VAULT_DIR):
         os.makedirs(VAULT_DIR)
         
     uploaded_audio = st.file_uploader("Choose an MP3 song to wake you up each morning:", type=["mp3"])
-    
     if uploaded_audio is not None:
         if st.button("Activate Selected Track"):
             active_alarm_path = os.path.join(VAULT_DIR, "active_morning_alarm.mp3")
             with open(active_alarm_path, "wb") as f:
                 f.write(uploaded_audio.getbuffer())
-                
             with open(os.path.join(VAULT_DIR, "last_upload_date.txt"), "w") as f:
                 f.write(datetime.date.today().strftime("%Y-%m-%d"))
-                
-            st.success("Success! Your morning alarm song has been safely uploaded and activated in the background vault.")
+            st.success("Success! Your morning alarm song has been safely activated in the background vault.")
