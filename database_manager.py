@@ -3,7 +3,7 @@ import psycopg2
 DB_NAME = "assistant_memory.db"
 
 # PASTE YOUR RENDER OR SUPABASE CONNECTION STRING LINK HERE INSIDE THE QUOTES
-DATABASE_URL = secrets["DATABASE_URL"]
+DATABASE_URL = st.secrets["DATABASE_URL"]
 
 def initialize_cloud_database():
     """Establishes tables directly on the cloud serverless database."""
