@@ -1,4 +1,5 @@
 import psycopg2
+import streamlit as st
 
 DB_NAME = "assistant_memory.db"
 
