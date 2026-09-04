@@ -1,14 +1,12 @@
-    from groq import Groq
+import streamlit as st
+from groq import Groq
 from search_tool import search_the_web
 
-# PASTE YOUR FRESH UNCOMPROMISED GROQ API KEY HERE INSIDE THE QUOTES
+# Securely grab your key from Streamlit's secrets vault
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 
 def ask_cloud_assistant(user_question: str, user_name: str, sex: str) -> str:
     """Sends queries to Groq's fast remote cloud infrastructure using openai/gpt-oss-120b."""
-    if GROQ_API_KEY == st.secrets["GROQ_API_KEY"]:
-        return f"Hey {user_name}, please add your Groq API key inside cloud_brain.py to enable my cloud mind."
-
     # Fetch live web data using our existing search script
     web_data = search_the_web(user_question)
     
@@ -30,7 +28,7 @@ def ask_cloud_assistant(user_question: str, user_name: str, sex: str) -> str:
                 {"role": "user", "content": user_question}
             ]
         )
-        # Reverting to the exact unpacked content line your local machine relies on
+        # Perfectly aligned list array unpacker to read the modern choice format
         return completion.choices[0].message.content
     except Exception as e:
         return f"Sorry {user_name}, my cloud network ran into an issue: {str(e)}"
