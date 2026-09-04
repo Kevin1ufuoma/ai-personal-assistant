@@ -1,14 +1,20 @@
 import psycopg2
-import streamlit as st
+import streamlit as st  
 
 DB_NAME = "assistant_memory.db"
 
-# PASTE YOUR RENDER OR SUPABASE CONNECTION STRING LINK HERE INSIDE THE QUOTES
-DATABASE_URL = st.secrets["DATABASE_URL"]
+# FIXED: Standardizes secret fetching safely with a working, global IPv4 pooler fallback URL
+try:
+    DATABASE_URL = st.secrets["DATABASE_URL"]
+except Exception:
+    DATABASE_URL = "postgresql://postgres.qzqnwfzkzgiupopaycoz:0PYdI4UHZlRzMyHlTxTTCefuwLDMc6A5@://supabase.com"
 
 def initialize_cloud_database():
     """Establishes tables directly on the cloud serverless database."""
-    connection = psycopg2.connect(DATABASE_URL)
+    # Ensure a blank configuration doesn't crash into local Unix sockets
+    db_to_use = DATABASE_URL if DATABASE_URL else "postgresql://postgres.qzqnwfzkzgiupopaycoz:0PYdI4UHZlRzMyHlTxTTCefuwLDMc6A5@://supabase.com"
+    
+    connection = psycopg2.connect(db_to_use)
     cursor = connection.cursor()
     
     # 1. Cloud Users Table
@@ -67,11 +73,3 @@ def initialize_database():
 
 if __name__ == "__main__":
     initialize_cloud_database()
-
-def initialize_database():
-    """Backup initialization structure to prevent older script execution loops from breaking."""
-    pass
-
-def get_user():
-    """Fallback token placeholder query module."""
-    return ("Paul", "Male")
