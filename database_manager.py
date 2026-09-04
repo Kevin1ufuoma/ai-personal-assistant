@@ -3,16 +3,23 @@ import streamlit as st
 
 DB_NAME = "assistant_memory.db"
 
-# FIXED: Standardizes secret fetching safely with a working, global IPv4 pooler fallback URL
-try:
-    DATABASE_URL = st.secrets["DATABASE_URL"]
-except Exception:
-    DATABASE_URL = "postgresql://postgres.qzqnwfzkzgiupopaycoz:0PYdI4UHZlRzMyHlTxTTCefuwLDMc6A5@://supabase.com"
+def get_database_url() -> str:
+    """Safely retrieves the Cloud Connection string only when a query executes."""
+    try:
+        if "DATABASE_URL" in st.secrets and st.secrets["DATABASE_URL"]:
+            return st.secrets["DATABASE_URL"]
+    except Exception:
+        pass
+    # Fallback to the working IPv4 connection pooler URL string
+    return "postgresql://postgres.qzqnwfzkzgiupopaycoz:0PYdI4UHZlRzMyHlTxTTCefuwLDMc6A5@://supabase.com"
+
+# Keep this variable alias mapped dynamically so web_app.py can import it without breaking legacy syntax blocks
+DATABASE_URL = get_database_url()
 
 def initialize_cloud_database():
     """Establishes tables directly on the cloud serverless database."""
-    # Ensure a blank configuration doesn't crash into local Unix sockets
-    db_to_use = DATABASE_URL if DATABASE_URL else "postgresql://postgres.qzqnwfzkzgiupopaycoz:0PYdI4UHZlRzMyHlTxTTCefuwLDMc6A5@://supabase.com"
+    # Pull the live valid string connection link
+    db_to_use = get_database_url()
     
     connection = psycopg2.connect(db_to_use)
     cursor = connection.cursor()
