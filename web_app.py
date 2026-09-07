@@ -58,7 +58,7 @@ def force_table_creation():
         conn.close()
         print("Render Cloud Database Structural Tables Synced Successfully!")
     except Exception as e:
-        st.error(f"Critical Database Sync Error: {e}")
+        print(f"Critical Database Sync Error: {e}")
 
 # We force execution right here!
 force_table_creation()
